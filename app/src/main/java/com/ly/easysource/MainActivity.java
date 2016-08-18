@@ -3,11 +3,15 @@ package com.ly.easysource;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.ly.easysource.R;
 import com.ly.easysource.eventdispatch.MyPhoneWindow;
 
-public class MainActivity extends AppCompatActivity {
+/**
+ * 1 activity的onTouchEvent默认返回false
+ */
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener,View.OnClickListener{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +33,15 @@ public class MainActivity extends AppCompatActivity {
         }
         return onTouchEvent(ev);
     }
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        return false;
+    }
 
+    @Override
+    public void onClick(View view) {
+
+    }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return false;

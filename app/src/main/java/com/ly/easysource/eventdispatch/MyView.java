@@ -4,7 +4,11 @@ import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 
 /**
- * Created by Administrator on 2016/8/18 0018.
+ * 通过代码发现，view中事件的响应顺序为，activity为1->3，而对于2，一般1，3不响应时，才会调用2
+ * 1 onTouch
+ * 2 onTouchEvent
+ * 3 onClickListener
+ *
  */
 public class MyView{
     /**
@@ -53,6 +57,9 @@ public class MyView{
                 case MotionEvent.ACTION_MOVE:
                     break;
                 case MotionEvent.ACTION_UP:
+                    if (li != null && li.mOnClickListener != null) {
+                        li.mOnClickListener.onClick(this);
+                    }
                     break;
                 case MotionEvent.ACTION_CANCEL:
                     break;
