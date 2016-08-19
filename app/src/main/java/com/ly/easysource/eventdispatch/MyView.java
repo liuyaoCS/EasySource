@@ -1,16 +1,17 @@
 package com.ly.easysource.eventdispatch;
 
 import android.view.MotionEvent;
+import android.view.SoundEffectConstants;
+import android.view.View;
 import android.view.ViewConfiguration;
 
 /**
- * 通过代码发现，view中事件的响应顺序为，activity为1->3，而对于2，一般1，3不响应时，才会调用2
- * 1 onTouch
- * 2 onTouchEvent
- * 3 onClickListener
- *
+ view中事件顺序，activity对于1和3只是设置的监听器，区分它的1,3回调和它本身的onTouchEvent（通常1,3不执行才会执行它本身的onTouchEvent）
+ 1 onTouch
+ 2 onTouchEvent
+ 3 onClick
  */
-public class MyView{
+public class MyView extends View {
     /**
      * Pass the touch screen motion event down to the target view, or this
      * view if it is the target.

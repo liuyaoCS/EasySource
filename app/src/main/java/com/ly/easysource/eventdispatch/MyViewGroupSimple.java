@@ -11,22 +11,40 @@ import android.view.View;
  *   自己的onTouchEvent不处理，一路上溯返回false，由最终的activity在本身onTouchEvent处理
  * 3 一开始down事件，中间ViewGoup在onInterceptTouchEvent拦截，child就不会再收到消息了
  * 4 如果ViewGroup不是拦截down事件，而是在move事件做出拦截，则之前的down事件找到的target会被置空，且child会收到cancel事件
- *   但是第一个move事件会丢失，从第二个move事件开始，交由这个ViewGroup的onTouchEvent处理（只要是clickable的就返回true）；
- *   同理，如果是拦截的up事件，则之前的down事件找到的target会被置空，且child会收到cancel事件，这个up事件会消失。
+ *   下一次事件则会由自己处理了（第一个拦截的move事件会丢失，如果是拦截的up事件，那么这个事件丢失）
+ *
+ * 滑动冲突解决
+ * 1 外部拦截法 符合事件分发机制，只需要修改父容器的onInterceptTouchEvent即可。
+ *  1）down事件目标child处理
+ *  2）move事件根据需要父容器通过onInterceptTouchEvent拦截
+ *      如果父容器拦截 则之后所有的move/up事件由父容器处理
+ *      如果父容器不拦截 所有的move/up由目标child处理
+ *  3）up事件父容器不拦截
+ *      假如父容器拦截up，那么目标child收不到up，无法处理onclick事件
+ * 2 内部拦截法 父容器拦截除了down之外的所有事件，目标child根据需求通过requestDisallowInterceptTouchEvent来决定
+ *   是否消费事件，如果不消费，则返回给父容器处理。
+ *   1）down事件由目标child处理
+ *      因为目标child在dispatchTouchEvent里才能调用requestDisallowInterceptTouchEvent，所以第一个down事件还来不及
+ *      改变父容器的拦截策略，所以down事件不能让父容器拦截。
+ *   2）move/up事件父容器通过onInterceptTouchEvent拦截
+ *      如果目标child需要消费这个事件，通过requestDisallowInterceptTouchEvent禁止父容器的拦截，处理move/up事件
+ *      如果目标child不需要消费这个事件，不作处理
+ *
  */
 public  class MyViewGroupSimple extends MyView {
 
     private MyTouchTarget mTarget;
     protected static final int FLAG_DISALLOW_INTERCEPT = 0x80000;
     /**
-     *这个函数表示事件的分发，每一层都会调用（前题是事件可以穿到这一层），控制着onInterceptTouchEvent和onTouchEvent的调用。
-     * 流程：先看看是否需要拦截，再根据是否有target做后续处理
-     * 1 如果不拦截，则在child中找target；之后根据是否找到target做处理
-     *  1）没找到target，自己处理
-     *  2）找到target，后续交给target处理
-     * 2 如果拦截，则根据target是否存在做处理
-     *  1）target不存在，自己处理
-     *  2）target存在，给target发送cancel信号，置空target，从下个事件（第一个move事件丢失问题）开始转到1）自己处理
+     * 流程：这个函数就是用来分发事件，首先会考虑是否进行拦截，然后根据target情况做进一步处理。
+     * 1 如果不拦截
+     *  1）target为空 则自己处理
+     *  2）target不为空 转交给target处理
+     * 2 如果拦截
+     *  1）target为空 则自己处理
+     *  2）target不为空 给target传递cancel事件，清空mTarget，
+     *    下一次事件可以自己处理了（如果拦截的是move，第一个move事件丢失；如果拦截up，则up事件丢失）
+     *
      * @return true 表示分发成功，自己或者child可以处理事件 ； false 表示分发失败，自己或者child不可以处理事件
      */
     @Override
@@ -69,7 +87,7 @@ public  class MyViewGroupSimple extends MyView {
 
         }
 
-        if (mTarget == null) { // 没有找到target或者在上一步拦截了事件清空了target，自己处理
+        if (mTarget == null) { // 没有找到target，自己处理
             handled=dispatchTransformedTouchEvent(ev,null,canceled);
         }else{                 //找到target，分派给target处理
             if (alreadyDispatchedToNewTouchTarget) {//1 down事件，且成功在childs中找到target并已分派，直接返回true了
@@ -99,6 +117,11 @@ public  class MyViewGroupSimple extends MyView {
         return false;
     }
 
+    /**
+     *
+     * @param event
+     * @return 默认处理事件，返回true（前提是view可以点击）
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return super.onTouchEvent(event);

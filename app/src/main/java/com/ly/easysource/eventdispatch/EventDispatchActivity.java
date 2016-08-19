@@ -1,22 +1,18 @@
-package com.ly.easysource;
+package com.ly.easysource.eventdispatch;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
-import android.view.View;
 
 import com.ly.easysource.R;
-import com.ly.easysource.eventdispatch.MyPhoneWindow;
+import com.ly.easysource.eventdispatch.inner.MyPhoneWindow;
 
-/**
- * 1 activity的onTouchEvent默认返回false
- */
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener,View.OnClickListener{
+public class EventDispatchActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_event_dispatch);
     }
     /**
      *
@@ -28,20 +24,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public boolean dispatchTouchEvent(MotionEvent ev) {
 
         //mDecor extends FrameLayout ,是setContentView里面的view的父容器
-        if (MyPhoneWindow.mDecor.dispatchTouchEvent(ev)) {
+        if (new MyPhoneWindow().getDecor().dispatchTouchEvent(ev)) {
             return true;
         }
         return onTouchEvent(ev);
     }
-    @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
-        return false;
-    }
 
-    @Override
-    public void onClick(View view) {
-
-    }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return false;
