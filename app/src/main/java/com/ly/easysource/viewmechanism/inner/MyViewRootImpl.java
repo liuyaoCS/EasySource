@@ -25,6 +25,7 @@ public class MyViewRootImpl {
         int childHeightMeasureSpec = getRootMeasureSpec(desiredWindowHeight, lp.height);
         performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
+
     public void setView(MyView view, WindowManager.LayoutParams attrs, View panelParentView) {
         mView=view;
     }
@@ -62,5 +63,12 @@ public class MyViewRootImpl {
         //measure函数是final的，只有在View类里，这是因为流程都是一样的，里面会调用ViewGroup的onMeasure
         //因此mView,也就是DecorView这里面调用的是View的measure，里面执行了FrameLayout的onMeasure
         mView.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+    }
+    private void performLayout(WindowManager.LayoutParams lp, int desiredWindowWidth,
+                               int desiredWindowHeight){
+        mView.layout(0, 0, mView.getMeasuredWidth(), mView.getMeasuredHeight());
+    }
+    private void performDraw() {
+        mView.draw(canvas);
     }
 }
