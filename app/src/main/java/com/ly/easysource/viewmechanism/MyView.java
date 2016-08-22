@@ -1,6 +1,20 @@
 package com.ly.easysource.viewmechanism;
 
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Shader;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
+
+import java.util.ArrayList;
+
 public class MyView {
     int mMeasuredHeight;
     int mMeasuredWidth;
@@ -55,6 +69,101 @@ public class MyView {
         return (mBackground == null) ? mMinHeight : max(mMinHeight, mBackground.getMinimumHeight());
 
     }
+
+    public void layout(int l, int t, int r, int b) {
+        if ((mPrivateFlags3 & PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT) != 0) {
+            onMeasure(mOldWidthMeasureSpec, mOldHeightMeasureSpec);
+            mPrivateFlags3 &= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
+        }
+
+        int oldL = mLeft;
+        int oldT = mTop;
+        int oldB = mBottom;
+        int oldR = mRight;
+
+        boolean changed = setFrame(l, t, r, b);
+
+        if (changed ) {
+            onLayout(changed, l, t, r, b);
+            ListenerInfo li = mListenerInfo;
+            if (li != null && li.mOnLayoutChangeListeners != null) {
+                int numListeners = li.mOnLayoutChangeListeners.size();
+                for (int i = 0; i < numListeners; ++i) {
+                    li.mOnLayoutChangeListeners.get(i).onLayoutChange(this, l, t, r, b, oldL, oldT, oldR, oldB);
+                }
+            }
+        }
+    }
+    protected boolean setFrame(int left, int top, int right, int bottom) {
+        boolean changed = false;
+
+        if (mLeft != left || mRight != right || mTop != top || mBottom != bottom) {
+            changed = true;
+
+            mLeft = left;
+            mTop = top;
+            mRight = right;
+            mBottom = bottom;
+        }
+        return changed;
+    }
+    /**
+     *ViewGroup的实现类需要实现这个方法，调用children的layout
+     */
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    }
+
+    /**
+     * Manually render this view (and all of its children) to the given Canvas.
+     * The view must have already done a full layout before this function is
+     * called.  When implementing a view, implement
+     * {@link #onDraw(android.graphics.Canvas)} instead of overriding this method.
+     * If you do need to override this method, call the superclass version.
+     *
+     * @param canvas The Canvas to which the View is rendered.
+     */
+    public void draw(Canvas canvas) {
+        /*
+         * Draw traversal performs several drawing steps which must be executed
+         * in the appropriate order:
+         *
+         *      1. Draw the background
+         *      2. Draw view's content
+         *      3. Draw children
+         *      4. Draw decorations (scrollbars for instance)
+         */
+
+        // Step 1, draw the background, if needed
+        if (!dirtyOpaque) {
+            background.draw(canvas);
+        }
+
+        // skip step 2 & 4 if possible (common case)
+        if (!verticalEdges && !horizontalEdges) {
+            // Step 2, draw the content
+            if (!dirtyOpaque) onDraw(canvas);
+
+            // Step 3, draw the children
+            dispatchDraw(canvas);
+
+            // Step 4, draw decorations (scrollbars)
+            onDrawScrollBars(canvas);
+
+            return;
+        }
+    }
+    protected void onDraw(Canvas canvas) {
+    }
+    /**
+     * Called by draw to draw the child views. This may be overridden
+     * by derived classes to gain control just before its children are drawn
+     * (but after its own view has been drawn).
+     * @param canvas the canvas on which to draw the view
+     */
+    protected void dispatchDraw(Canvas canvas) {
+
+    }
+
     public static class MeasureSpec {
         private static final int MODE_SHIFT = 30;
         private static final int MODE_MASK = 0x3 << MODE_SHIFT;

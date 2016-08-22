@@ -1,11 +1,16 @@
 package com.ly.easysource.viewmechanism;
 
+import android.graphics.Canvas;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LayoutAnimationController;
+
+import java.util.ArrayList;
 
 /**
  * Created by Administrator on 2016/8/19 0019.
  */
-public class MyViewGroup extends MyView{
+public abstract  class MyViewGroup extends MyView{
     /**
      * 各个实现类只需要实现这个函数
      */
@@ -110,5 +115,36 @@ public class MyViewGroup extends MyView{
                 break;
         }
         return MeasureSpec.makeMeasureSpec(resultSize, resultMode);
+    }
+    @Override
+    public final void layout(int l, int t, int r, int b) {
+        if (!mSuppressLayout && (mTransition == null || !mTransition.isChangingLayout())) {
+            if (mTransition != null) {
+                mTransition.layoutChange(this);
+            }
+            super.layout(l, t, r, b);
+        } else {
+            // record the fact that we noop'd it; request layout when transition finishes
+            mLayoutCalledWhileSuppressed = true;
+        }
+    }
+    @Override
+    protected abstract void onLayout(boolean changed, int l, int t, int r, int b);
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        final int count = mChildrenCount;
+        final View[] children = mChildren;
+
+        for (int i = 0; i < count; i++) {
+            final View child = children[i];
+            if ((child.mViewFlags & VISIBILITY_MASK) == VISIBLE || child.getAnimation() != null) {
+                drawChild(canvas, child, drawingTime);
+            }
+        }
+
+    }
+    protected boolean drawChild(Canvas canvas, MyView child, long drawingTime) {
+        return child.draw(canvas, this, drawingTime);
     }
 }
