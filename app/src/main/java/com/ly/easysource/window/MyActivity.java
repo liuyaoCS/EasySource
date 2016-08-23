@@ -57,6 +57,8 @@ public class MyActivity implements Window.Callback{
      *      虽然activity的token在回调onCreate的时候已经创建了，但是anchorView需要onAttachedToWindow后才有token
      *      而调用顺序一般为：onCreate->onResume->activity.onAttachedToWindow->anchorView.onAttachedToWindow
      *
+     *      另外，因为Dialog的参数就是activity，因为不存在以上问题，在onCreate里就可以创建并显示
+     *
      * 原理： 在handleResumeActivity里通过IWindowSession类型的mWindowSession远程调用Session，继而调用WMS添加window，
      *      之后updateFocusedWindowLocked通过消息机制调用IWindow mClient的windowFocusChanged，传回客户端
      * @param hasFocus
