@@ -1,4 +1,4 @@
-package com.ly.easysource.viewmechanism.inner;
+package com.ly.easysource.core;
 
 import com.ly.easysource.viewmechanism.MyFrameLayout;
 
@@ -7,9 +7,16 @@ import com.ly.easysource.viewmechanism.MyFrameLayout;
  */
 public class MyPhoneWindow{
     private  DecorView mDecor;
-    public DecorView getDecor(){
+    public DecorView getDecorView(){
         return mDecor;
     }
+
+    public void setContentView(int layoutResID) {
+    }
+
+    public MyWindowManager getWindowManager() {
+    }
+
     private final class DecorView extends MyFrameLayout {
 
     }

@@ -1,4 +1,4 @@
-package com.ly.easysource.viewmechanism.inner;
+package com.ly.easysource.core;
 
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +11,42 @@ import com.ly.easysource.viewmechanism.MyView;
  */
 public class MyViewRootImpl {
     MyView mView;
+    boolean mTraversalScheduled;
+    public void setView(MyView view, WindowManager.LayoutParams attrs, View panelParentView) {
+        mView=view;
+        // Schedule the first layout -before- adding to the window
+        // manager, to make sure we do the relayout before receiving
+        // any other events from the system.
+        requestLayout();
+        //通过binder机制最终实现WindowManagerService->addWindow,完成window的添加
+        res = mWindowSession.addToDisplay(mWindow, mSeq, mWindowAttributes,
+                getHostVisibility(), mDisplay.getDisplayId(),
+                mAttachInfo.mContentInsets, mAttachInfo.mStableInsets,
+                mAttachInfo.mOutsets, mInputChannel);
+    }
+    @Override
+    public void requestLayout() {
+        scheduleTraversals();
+    }
+    void scheduleTraversals() {
+        if (!mTraversalScheduled) {
+            mTraversalScheduled = true;
+            mChoreographer.postCallback(Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, null);
+        }
+    }
+    final TraversalRunnable mTraversalRunnable = new TraversalRunnable();
+    final class TraversalRunnable implements Runnable {
+        @Override
+        public void run() {
+            doTraversal();
+        }
+    }
+    void doTraversal() {
+        if (mTraversalScheduled) {
+            performTraversals();
+        }
+    }
+
     private void performTraversals() {
         measureHierarchy(mView, lp, desiredWindowWidth, desiredWindowHeight);
         performLayout(lp, desiredWindowWidth, desiredWindowHeight);
@@ -25,11 +61,6 @@ public class MyViewRootImpl {
         int childHeightMeasureSpec = getRootMeasureSpec(desiredWindowHeight, lp.height);
         performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
-
-    public void setView(MyView view, WindowManager.LayoutParams attrs, View panelParentView) {
-        mView=view;
-    }
-
     /**
      *父容器约束+View自身的LayoutParams=MeasureSpec
      * 1 DecorView 父容器约束指的是窗口尺寸

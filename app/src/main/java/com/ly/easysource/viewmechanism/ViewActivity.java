@@ -35,6 +35,12 @@ public class ViewActivity extends AppCompatActivity {
                 int width=contentView.getWidth();
             }
         });
-        //2 post ??
+        //2 onWindowFocusChanged 这个函数被调用时，Activity已经加载完毕（完成渲染）
+        //3 post 学完handler进一步分析？？
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
     }
 }

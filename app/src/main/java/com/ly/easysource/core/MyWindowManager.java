@@ -1,4 +1,4 @@
-package com.ly.easysource.viewmechanism.inner;
+package com.ly.easysource.core;
 
 import android.support.annotation.NonNull;
 import android.view.ViewGroup;

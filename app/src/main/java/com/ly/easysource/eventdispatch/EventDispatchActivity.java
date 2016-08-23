@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 
 import com.ly.easysource.R;
-import com.ly.easysource.eventdispatch.inner.MyPhoneWindow;
+import com.ly.easysource.core.MyPhoneWindow;
 
 public class EventDispatchActivity extends AppCompatActivity {
 
@@ -24,7 +24,7 @@ public class EventDispatchActivity extends AppCompatActivity {
     public boolean dispatchTouchEvent(MotionEvent ev) {
 
         //mDecor extends FrameLayout ,是setContentView里面的view的父容器
-        if (new MyPhoneWindow().getDecor().dispatchTouchEvent(ev)) {
+        if (new MyPhoneWindow().getDecorView().dispatchTouchEvent(ev)) {
             return true;
         }
         return onTouchEvent(ev);
