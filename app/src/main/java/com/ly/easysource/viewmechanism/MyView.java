@@ -221,4 +221,11 @@ public class MyView {
         }
 
     }
+
+    public void dispatchWindowFocusChanged(boolean hasFocus) {
+        onWindowFocusChanged(hasFocus);
+    }
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
+
+    }
 }

@@ -1,4 +1,4 @@
-package com.ly.easysource.core;
+package com.ly.easysource.core.client;
 
 import android.view.Window;
 

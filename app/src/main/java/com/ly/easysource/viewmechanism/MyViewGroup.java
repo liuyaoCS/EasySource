@@ -147,4 +147,13 @@ public abstract  class MyViewGroup extends MyView{
     protected boolean drawChild(Canvas canvas, MyView child, long drawingTime) {
         return child.draw(canvas, this, drawingTime);
     }
+    @Override
+    public void dispatchWindowFocusChanged(boolean hasFocus) {
+        super.dispatchWindowFocusChanged(hasFocus);
+        final int count = mChildrenCount;
+        final MyView[] children = mChildren;
+        for (int i = 0; i < count; i++) {
+            children[i].dispatchWindowFocusChanged(hasFocus);
+        }
+    }
 }

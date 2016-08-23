@@ -8,8 +8,8 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.Window;
 
-import com.ly.easysource.core.MyPhoneWindow;
-import com.ly.easysource.core.MyWindowManager;
+import com.ly.easysource.core.client.MyPhoneWindow;
+import com.ly.easysource.core.client.MyWindowManager;
 import com.ly.easysource.viewmechanism.MyView;
 
 /**

@@ -1,7 +1,6 @@
-package com.ly.easysource.core;
+package com.ly.easysource.core.client;
 
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.ComponentName;
 import android.content.Intent;

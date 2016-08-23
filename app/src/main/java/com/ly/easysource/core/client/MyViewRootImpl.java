@@ -1,10 +1,15 @@
-package com.ly.easysource.core;
+package com.ly.easysource.core.client;
 
+import android.os.Message;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
+import com.ly.easysource.core.client.binder.IWindow;
+import com.ly.easysource.core.remote.binder.IWindowSession;
 import com.ly.easysource.viewmechanism.MyView;
+
+import java.lang.ref.WeakReference;
 
 /**
  * Created by Administrator on 2016/8/19 0019.
@@ -12,13 +17,49 @@ import com.ly.easysource.viewmechanism.MyView;
 public class MyViewRootImpl {
     MyView mView;
     boolean mTraversalScheduled;
+    //binder机制，远端Session的客户端代理
+    final IWindowSession mWindowSession;
+
+    /**
+     * binder机制，客户端本地代理；WMS通过IWindow mClient这个客户端代理访问客户端
+     */
+    static class W extends IWindow.Stub {
+        private final IWindowSession mWindowSession;
+        private final WeakReference<MyViewRootImpl> mViewAncestor;
+        W(MyViewRootImpl viewAncestor) {
+            mViewAncestor = new WeakReference<MyViewRootImpl>(viewAncestor);
+            mWindowSession = viewAncestor.mWindowSession;
+        }
+        @Override
+        public void windowFocusChanged(boolean hasFocus, boolean inTouchMode) {
+            final MyViewRootImpl viewAncestor = mViewAncestor.get();
+            if (viewAncestor != null) {
+                viewAncestor.windowFocusChanged(hasFocus, inTouchMode);
+            }
+        }
+    }
+    public void windowFocusChanged(boolean hasFocus, boolean inTouchMode) {
+        Message msg = Message.obtain();
+        msg.what = MSG_WINDOW_FOCUS_CHANGED;
+        msg.arg1 = hasFocus ? 1 : 0;
+        msg.arg2 = inTouchMode ? 1 : 0;
+        mHandler.sendMessage(msg);
+    }
+    public void handleMessage(Message msg) {
+        switch (msg.what) {
+            case MSG_WINDOW_FOCUS_CHANGED: {
+                mView.dispatchWindowFocusChanged(hasWindowFocus);
+                mAttachInfo.mTreeObserver.dispatchOnWindowFocusChange(hasWindowFocus);
+                break;
+            }
+        }
+    }
     public void setView(MyView view, WindowManager.LayoutParams attrs, View panelParentView) {
         mView=view;
-        // Schedule the first layout -before- adding to the window
-        // manager, to make sure we do the relayout before receiving
-        // any other events from the system.
+        //渲染view，需在接受事件之前
         requestLayout();
-        //通过binder机制最终实现WindowManagerService->addWindow,完成window的添加
+        //通过binder机制最终实现WindowManagerService->addWindow,完成window的添加,
+        // 最终由W的windowFocusChanged接收，之后activity可以与用户交互了
         res = mWindowSession.addToDisplay(mWindow, mSeq, mWindowAttributes,
                 getHostVisibility(), mDisplay.getDisplayId(),
                 mAttachInfo.mContentInsets, mAttachInfo.mStableInsets,

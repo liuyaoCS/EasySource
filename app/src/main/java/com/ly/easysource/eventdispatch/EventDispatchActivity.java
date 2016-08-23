@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 
 import com.ly.easysource.R;
-import com.ly.easysource.core.MyPhoneWindow;
+import com.ly.easysource.core.client.MyPhoneWindow;
 
 public class EventDispatchActivity extends AppCompatActivity {
 

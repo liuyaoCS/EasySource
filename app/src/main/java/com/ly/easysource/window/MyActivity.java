@@ -1,23 +1,17 @@
 package com.ly.easysource.window;
 
-import android.app.Activity;
 import android.app.Application;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.os.IBinder;
 import android.support.annotation.LayoutRes;
 import android.view.MotionEvent;
 import android.view.Window;
+import com.ly.easysource.core.client.MyPhoneWindow;
+import com.ly.easysource.core.client.MyWindowManager;
 
-import com.ly.easysource.core.MyPhoneWindow;
-import com.ly.easysource.core.MyWindowManager;
-
-/**
- * Created by Administrator on 2016/8/23 0023.
- */
 public class MyActivity implements Window.Callback{
     private MyPhoneWindow mWindow;
     private MyWindowManager mWindowManager;
@@ -59,8 +53,12 @@ public class MyActivity implements Window.Callback{
      * 监听一个Activity加载完毕（完成渲染），此时可以
      * 1 获取view的尺寸参数
      * 2 显示PopUpWindow
+     *      因为PopUpWindow需要一个anchor，而这个anchor肯定是activity里的某个view。
+     *      虽然activity的token在回调onCreate的时候已经创建了，但是anchorView需要onAttachedToWindow后才有token
+     *      而调用顺序一般为：onCreate->onResume->activity.onAttachedToWindow->anchorView.onAttachedToWindow
      *
-     * 注意：具体调用是在W类里调的，和binder有关，学完handler进一步分析？？
+     * 原理： 在handleResumeActivity里通过IWindowSession类型的mWindowSession远程调用Session，继而调用WMS添加window，
+     *      之后updateFocusedWindowLocked通过消息机制调用IWindow mClient的windowFocusChanged，传回客户端
      * @param hasFocus
      */
     @Override
@@ -68,6 +66,10 @@ public class MyActivity implements Window.Callback{
 
     }
 
+    /**
+     * 这个函数调用在onWindowFocusChanged之前,一般不建议使用！！
+     * 但是activity的onAttachedToWindow会早于其中的view的onAttachedToWindow，所以这里面不能显示PopUpView
+     */
     @Override
     public void onAttachedToWindow() {
 

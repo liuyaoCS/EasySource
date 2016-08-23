@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.IBinder;
 import android.view.View;
 
-import com.ly.easysource.core.MyWindowManager;
+import com.ly.easysource.core.client.MyWindowManager;
 
 /**
  * 虽然没有window，但是依然是类似的模式,唯一区别在于：
@@ -55,6 +55,6 @@ public class MyPopupWindow {
     }
     private void invokePopup(MyWindowManager.LayoutParams p) {
         final PopupDecorView decorView = mDecorView;
-        mWindowManager.addView(decorView, p);
+        myWindowManager.addView(decorView, p);
     }
 }
