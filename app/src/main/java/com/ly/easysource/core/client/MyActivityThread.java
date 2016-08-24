@@ -1,11 +1,23 @@
 package com.ly.easysource.core.client;
 
 
+import android.app.ActivityOptions;
 import android.app.Application;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.ProviderInfo;
+import android.content.res.Configuration;
+import android.os.Binder;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
+import android.os.Process;
+import android.os.Trace;
+import android.util.Pair;
 
+import com.ly.easysource.core.client.binder.IApplicationThread;
 import com.ly.easysource.window.MyActivity;
 
 /**
@@ -13,7 +25,81 @@ import com.ly.easysource.window.MyActivity;
  */
 public class MyActivityThread {
     MyWindowManager wm;
+    final ApplicationThread mAppThread = new ApplicationThread();
+    final H mH = new H();
+    private class ApplicationThread extends Binder
+            implements IApplicationThread {
 
+        @Override
+        public final void scheduleLaunchActivity() {
+            mH.sendMessage(H.LAUNCH_ACTIVITY, r);
+        }
+        public final void scheduleResumeActivity(IBinder token, int processState,
+                                                 boolean isForward, Bundle resumeArgs) {
+            mH.sendMessage(H.RESUME_ACTIVITY, token, isForward ? 1 : 0);
+        }
+        public final void schedulePauseActivity(IBinder token, boolean finished,
+                                                boolean userLeaving, int configChanges, boolean dontReport) {
+            mH.sendMessage();
+        }
+
+        public final void scheduleStopActivity(IBinder token, boolean showWindow,
+                                               int configChanges) {
+            mH.sendMessage();
+        }
+        public final void scheduleDestroyActivity(IBinder token, boolean finishing,
+                                                  int configChanges) {
+            mH.sendMessage(H.DESTROY_ACTIVITY, token, finishing ? 1 : 0, configChanges);
+        }
+        public final void scheduleBindService(IBinder token, Intent intent,
+                                              boolean rebind, int processState) {
+            mH.sendMessage(H.BIND_SERVICE, s);
+        }
+
+        public final void scheduleUnbindService(IBinder token, Intent intent) {
+            mH.sendMessage(H.UNBIND_SERVICE, s);
+        }
+
+    }
+    private class H extends Handler {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case LAUNCH_ACTIVITY: {
+                    handleLaunchActivity(r, null);
+                } break;
+                case RESUME_ACTIVITY:
+                    handleResumeActivity((IBinder) msg.obj, true, msg.arg1 != 0, true);
+                    break;
+
+                case CREATE_SERVICE:
+                    handleCreateService((CreateServiceData)msg.obj);
+                    break;
+                case BIND_SERVICE:
+                    handleBindService((BindServiceData)msg.obj);
+                    break;
+                case UNBIND_SERVICE:
+                    handleUnbindService((BindServiceData)msg.obj);
+                    break;
+                case STOP_SERVICE:
+                    handleStopService((IBinder)msg.obj);
+                    break;
+
+                case RECEIVER:
+                    handleReceiver((ReceiverData)msg.obj);
+                    break;
+                case DISPATCH_PACKAGE_BROADCAST:
+                    handleDispatchPackageBroadcast(msg.arg1, (String[])msg.obj);
+                    break;
+
+                case NEW_INTENT:
+                    handleNewIntent((NewIntentData)msg.obj);
+                    break;
+                case ACTIVITY_CONFIGURATION_CHANGED:
+                    handleActivityConfigurationChanged((ActivityConfigChangeData)msg.obj);
+                    break;
+            }
+        }
+    }
     private void handleLaunchActivity(MyActivityClientRecord r, Intent customIntent) {
         performLaunchActivity(r, customIntent);
     }

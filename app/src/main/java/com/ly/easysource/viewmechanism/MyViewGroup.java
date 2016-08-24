@@ -148,6 +148,17 @@ public abstract  class MyViewGroup extends MyView{
         return child.draw(canvas, this, drawingTime);
     }
     @Override
+    void dispatchAttachedToWindow(AttachInfo info, int visibility) {
+        super.dispatchAttachedToWindow(info, visibility);
+        final int count = mChildrenCount;
+        final View[] children = mChildren;
+        for (int i = 0; i < count; i++) {
+            final MyView child = children[i];
+            child.dispatchAttachedToWindow(info,
+                    combineVisibility(visibility, child.getVisibility()));
+        }
+    }
+    @Override
     public void dispatchWindowFocusChanged(boolean hasFocus) {
         super.dispatchWindowFocusChanged(hasFocus);
         final int count = mChildrenCount;

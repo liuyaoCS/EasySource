@@ -221,7 +221,11 @@ public class MyView {
         }
 
     }
-
+    void dispatchAttachedToWindow(AttachInfo info, int visibility) {
+        onAttachedToWindow();
+    }
+    protected void onAttachedToWindow() {
+    }
     public void dispatchWindowFocusChanged(boolean hasFocus) {
         onWindowFocusChanged(hasFocus);
     }

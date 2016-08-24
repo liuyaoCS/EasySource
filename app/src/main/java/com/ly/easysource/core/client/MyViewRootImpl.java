@@ -89,6 +89,7 @@ public class MyViewRootImpl {
     }
 
     private void performTraversals() {
+        mView.dispatchAttachedToWindow(mAttachInfo, 0);
         measureHierarchy(mView, lp, desiredWindowWidth, desiredWindowHeight);
         performLayout(lp, desiredWindowWidth, desiredWindowHeight);
         //下面两个监听函数在measure之后执行，可以得到view的测量参数

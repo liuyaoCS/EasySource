@@ -1,4 +1,4 @@
-package com.ly.easysource.core.remote;
+package com.ly.easysource.core.remote.wms;
 
 import android.view.View;
 

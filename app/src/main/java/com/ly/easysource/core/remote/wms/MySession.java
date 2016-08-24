@@ -1,9 +1,8 @@
-package com.ly.easysource.core.remote;
+package com.ly.easysource.core.remote.wms;
 
 import android.graphics.Rect;
 import android.view.WindowManager;
 
-import com.ly.easysource.core.remote.MyWindowManagerService;
 import com.ly.easysource.core.remote.binder.IWindowSession;
 
 /**

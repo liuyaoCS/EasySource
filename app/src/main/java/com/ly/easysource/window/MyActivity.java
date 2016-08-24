@@ -69,7 +69,8 @@ public class MyActivity implements Window.Callback{
     }
 
     /**
-     * 这个函数调用在onWindowFocusChanged之前,一般不建议使用！！
+     * 在viewRootImpl进行渲染view前期就会调用，渲染结束后，才将window添加到wms上，之后回调onWindowFocusChanged
+     * 所以这个函数调用在onWindowFocusChanged之前,一般不建议使用！！
      * 但是activity的onAttachedToWindow会早于其中的view的onAttachedToWindow，所以这里面不能显示PopUpView
      */
     @Override
