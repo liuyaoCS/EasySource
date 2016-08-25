@@ -1,10 +1,12 @@
 package com.ly.easysource.components.activity;
 
 import android.app.Activity;
-import android.app.Instrumentation;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 
+import com.ly.easysource.components.MyContextImpl;
 import com.ly.easysource.components.MyInstrumentation;
 import com.ly.easysource.core.client.MyActivityThread;
 
@@ -14,6 +16,7 @@ import com.ly.easysource.core.client.MyActivityThread;
 public class MyActivity extends Activity{
     private MyInstrumentation mInstrumentation;
     MyActivityThread mMainThread;
+    MyContextImpl mBase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,5 +29,15 @@ public class MyActivity extends Activity{
                 mInstrumentation.execStartActivity(
                         this, mMainThread.getApplicationThread(), mToken, this,
                         intent, requestCode, options);
+    }
+
+    @Override
+    public ComponentName startService(Intent service) {
+        return mBase.startService(service);
+    }
+
+    @Override
+    public boolean bindService(Intent service, ServiceConnection conn, int flags) {
+        return mBase.bindService(service, conn, flags);
     }
 }

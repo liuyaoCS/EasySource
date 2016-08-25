@@ -7,6 +7,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.ly.easysource.core.client.binder.IApplicationThread;
 import com.ly.easysource.core.remote.binder.IActivityManager;
 
 /**

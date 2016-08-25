@@ -6,6 +6,7 @@ import android.app.Application;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ProviderInfo;
+import android.content.pm.ServiceInfo;
 import android.content.res.Configuration;
 import android.os.Binder;
 import android.os.Bundle;
@@ -15,8 +16,12 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.os.Trace;
+import android.util.ArrayMap;
 import android.util.Pair;
 
+import com.ly.easysource.components.MyContextImpl;
+import com.ly.easysource.components.MyInstrumentation;
+import com.ly.easysource.components.service.MyService;
 import com.ly.easysource.core.client.binder.IApplicationThread;
 import com.ly.easysource.window.MyActivity;
 
@@ -26,7 +31,9 @@ import com.ly.easysource.window.MyActivity;
 public class MyActivityThread {
     MyWindowManager wm;
     final ApplicationThread mAppThread = new ApplicationThread();
+    MyInstrumentation mInstrumentation;
     final H mH = new H();
+    final ArrayMap<IBinder, MyService> mServices = new ArrayMap<>();
     private class ApplicationThread extends Binder
             implements IApplicationThread {
 
@@ -50,6 +57,17 @@ public class MyActivityThread {
         public final void scheduleDestroyActivity(IBinder token, boolean finishing,
                                                   int configChanges) {
             mH.sendMessage(H.DESTROY_ACTIVITY, token, finishing ? 1 : 0, configChanges);
+
+        }
+        public final void scheduleCreateService(IBinder token,
+                                                ServiceInfo info, CompatibilityInfo compatInfo, int processState) {
+
+            mH.sendMessage(H.CREATE_SERVICE, s);
+        }
+        public final void scheduleServiceArgs(IBinder token, boolean taskRemoved, int startId,
+                                              int flags ,Intent args) {
+
+            mH.sendMessage(H.SERVICE_ARGS, s);
         }
         public final void scheduleBindService(IBinder token, Intent intent,
                                               boolean rebind, int processState) {
@@ -73,6 +91,9 @@ public class MyActivityThread {
 
                 case CREATE_SERVICE:
                     handleCreateService((CreateServiceData)msg.obj);
+                    break;
+                case SERVICE_ARGS:
+                    handleServiceArgs((ServiceArgsData)msg.obj);
                     break;
                 case BIND_SERVICE:
                     handleBindService((BindServiceData)msg.obj);
@@ -103,21 +124,6 @@ public class MyActivityThread {
     private void handleLaunchActivity(MyActivityClientRecord r, Intent customIntent) {
         performLaunchActivity(r, customIntent);
     }
-
-    /**
-     * 1 activityThread将handleLaunchActivity中创建的PhoneWindow交给WindowManager管理，
-     * WindowManager创建一个ViewRootImpl，管理window的添加，删除，更新，下面一添加为例：
-     * 1）通过requestLayout渲染view
-     * 2）随后通过binder将PhoneWindow添加到WindowManagerService上
-     * 2 根据调用顺序 onResume在函数绘制之前调用，显然，onCreate/onResume都得不到view的测量参数
-     */
-    final void handleResumeActivity() {
-        MyActivityClientRecord r = performResumeActivity(token, clearHide);
-
-        wm = r.activity.getWindowManager();
-        wm.addView(r.activity.getWindow().getDecorView(), r.window.getAttributes());
-    }
-
     private MyActivity performLaunchActivity(MyActivityClientRecord r, Intent customIntent) {
         ComponentName component = r.intent.getComponent();
         java.lang.ClassLoader cl = r.packageInfo.getClassLoader();
@@ -133,9 +139,59 @@ public class MyActivityThread {
         }
         return r.activity;
     }
+
+    /**
+     * 1 activityThread将handleLaunchActivity中创建的PhoneWindow交给WindowManager管理，
+     * WindowManager创建一个ViewRootImpl，管理window的添加，删除，更新，下面以添加为例：
+     * 1）通过requestLayout渲染view
+     * 2）随后通过binder将PhoneWindow添加到WindowManagerService上
+     * 2 根据调用顺序 onResume在函数绘制之前调用，显然，onCreate/onResume都得不到view的测量参数
+     */
+    final void handleResumeActivity() {
+        MyActivityClientRecord r = performResumeActivity(token, clearHide);
+
+        wm = r.activity.getWindowManager();
+        wm.addView(r.activity.getWindow().getDecorView(), r.window.getAttributes());
+    }
     public final MyActivityClientRecord performResumeActivity(IBinder token, boolean clearHide) {
         MyActivityClientRecord r = mActivities.get(token);
         r.activity.performResume();
         return r;
     }
+
+    private void handleCreateService(CreateServiceData data) {
+
+        LoadedApk packageInfo = getPackageInfoNoCheck(
+                data.info.applicationInfo, data.compatInfo);
+        java.lang.ClassLoader cl = packageInfo.getClassLoader();
+        MyService service = (MyService) cl.loadClass(data.info.name).newInstance();
+
+
+        MyContextImpl context = MyContextImpl.createAppContext(this, packageInfo);
+        context.setOuterContext(service);
+
+        Application app = packageInfo.makeApplication(false, mInstrumentation);
+        service.attach(context, this, MyActivityManagerNative.getDefault());
+        service.onCreate();
+
+        mServices.put(data.token, service);
+    }
+    private void handleServiceArgs(ServiceArgsData data) {
+        s.onStartCommand(data.args, data.flags, data.startId);
+    }
+    private void handleBindService(BindServiceData data) {
+        MyService s = mServices.get(data.token);
+        //多次绑定同一service，onBind只会执行一次，其余执行onRebind
+        if (!data.rebind) {
+            IBinder binder = s.onBind(data.intent);
+            MyActivityManagerNative.getDefault().publishService(
+                    data.token, data.intent, binder);
+        } else {
+            s.onRebind(data.intent);
+            MyActivityManagerNative.getDefault().serviceDoneExecuting(
+                    data.token, SERVICE_DONE_EXECUTING_ANON, 0, 0);
+        }
+    }
+
+
 }
