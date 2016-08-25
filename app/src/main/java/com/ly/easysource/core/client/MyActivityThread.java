@@ -1,28 +1,22 @@
 package com.ly.easysource.core.client;
 
 
-import android.app.ActivityOptions;
 import android.app.Application;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.pm.ProviderInfo;
 import android.content.pm.ServiceInfo;
-import android.content.res.Configuration;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
-import android.os.Process;
-import android.os.Trace;
 import android.util.ArrayMap;
-import android.util.Pair;
 
 import com.ly.easysource.components.MyContextImpl;
 import com.ly.easysource.components.MyInstrumentation;
 import com.ly.easysource.components.service.MyService;
 import com.ly.easysource.core.client.binder.IApplicationThread;
+import com.ly.easysource.components.receiver.binder.IIntentReceiver;
 import com.ly.easysource.window.MyActivity;
 
 /**
@@ -80,6 +74,12 @@ public class MyActivityThread {
 
         public final void scheduleUnbindService(IBinder token, Intent intent) {
             mH.sendMessage(H.UNBIND_SERVICE, s);
+        }
+        public void scheduleRegisteredReceiver(IIntentReceiver receiver, Intent intent,
+                                               int resultCode, String dataStr, Bundle extras, boolean ordered,
+                                               boolean sticky, int sendingUser, int processState) throws RemoteException {
+            receiver.performReceive(intent, resultCode, dataStr, extras, ordered,
+                    sticky, sendingUser);
         }
 
     }

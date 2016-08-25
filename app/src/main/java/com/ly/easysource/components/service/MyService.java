@@ -2,6 +2,7 @@ package com.ly.easysource.components.service;
 
 import android.app.Application;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
@@ -9,7 +10,10 @@ import android.support.annotation.Nullable;
 
 
 /**
- * Created by Administrator on 2016/8/25 0025.
+ * 1 service可以通过android:process=":remote"或者android:process="remote"运行在另外的进程
+ * 其实是Binder线程池里，所以如果指定复杂运算，依然要重新开辟线程
+ * 2 普通service流程
+ *   绑定service流程（指定flag为Context.AUTO_CREATE），attach->onCreate->onBind
  */
 public class MyService extends Service{
 
@@ -46,5 +50,6 @@ public class MyService extends Service{
     public void onRebind(Intent intent) {
         super.onRebind(intent);
     }
+
 
 }

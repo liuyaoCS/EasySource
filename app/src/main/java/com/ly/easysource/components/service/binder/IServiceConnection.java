@@ -2,7 +2,7 @@
  * This file is auto-generated.  DO NOT MODIFY.
  * Original file: frameworks/base/core/java/android/app/IServiceConnection.aidl
  */
-package com.ly.easysource.core.remote.binder;
+package com.ly.easysource.components.service.binder;
 /** @hide */
 public interface IServiceConnection extends android.os.IInterface
 {

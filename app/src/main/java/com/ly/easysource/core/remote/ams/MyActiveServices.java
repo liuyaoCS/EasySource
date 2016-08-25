@@ -6,7 +6,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 
 import com.ly.easysource.components.MyLoadedApk;
-import com.ly.easysource.core.remote.binder.IServiceConnection;
+import com.ly.easysource.components.service.binder.IServiceConnection;
 import com.ly.easysource.core.client.binder.IApplicationThread;
 
 /**

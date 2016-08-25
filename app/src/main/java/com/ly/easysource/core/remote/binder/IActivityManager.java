@@ -54,6 +54,8 @@ import android.os.StrictMode;
 import android.service.voice.IVoiceInteractionSession;
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.os.IResultReceiver;
+import com.ly.easysource.components.receiver.binder.IIntentReceiver;
+import com.ly.easysource.components.service.binder.IServiceConnection;
 
 import java.util.List;
 
@@ -102,8 +104,8 @@ public interface IActivityManager extends IInterface {
     public void releaseSomeActivities(IApplicationThread app) throws RemoteException;
     public boolean willActivityBeVisible(IBinder token) throws RemoteException;
     public Intent registerReceiver(IApplicationThread caller, String callerPackage,
-            IIntentReceiver receiver, IntentFilter filter,
-            String requiredPermission, int userId) throws RemoteException;
+                                   IIntentReceiver receiver, IntentFilter filter,
+                                   String requiredPermission, int userId) throws RemoteException;
     public void unregisterReceiver(IIntentReceiver receiver) throws RemoteException;
     public int broadcastIntent(IApplicationThread caller, Intent intent,
             String resolvedType, IIntentReceiver resultTo, int resultCode,
@@ -169,8 +171,8 @@ public interface IActivityManager extends IInterface {
     public void setServiceForeground(ComponentName className, IBinder token,
             int id, Notification notification, boolean keepNotification) throws RemoteException;
     public int bindService(IApplicationThread caller, IBinder token, Intent service,
-            String resolvedType, IServiceConnection connection, int flags,
-            String callingPackage, int userId) throws RemoteException;
+                           String resolvedType, IServiceConnection connection, int flags,
+                           String callingPackage, int userId) throws RemoteException;
     public boolean unbindService(IServiceConnection connection) throws RemoteException;
     public void publishService(IBinder token,
             Intent intent, IBinder service) throws RemoteException;
