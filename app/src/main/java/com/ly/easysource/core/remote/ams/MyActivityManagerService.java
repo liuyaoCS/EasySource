@@ -57,6 +57,8 @@ public class MyActivityManagerService extends MyActivityManagerNative {
                                      String[] requiredPermissions, int appOp, Bundle options,
                                      boolean serialized, boolean sticky, int userId) {
         // By default broadcasts do not go to stopped apps.
+        //如果需要让未启动的应用接受消息，Intent需要添加Intent.FLAG_INCLUDE_STOPPED_PACKAGES
+        //遗憾的是6.0以后不适用
         intent.addFlags(Intent.FLAG_EXCLUDE_STOPPED_PACKAGES);
 
         final MyBroadcastQueue queue = broadcastQueueForIntent(intent);
