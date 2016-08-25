@@ -29,11 +29,15 @@ import com.ly.easysource.window.MyActivity;
  * Created by Administrator on 2016/8/19 0019.
  */
 public class MyActivityThread {
-    MyWindowManager wm;
+    final ArrayMap<IBinder, MyService> mServices = new ArrayMap<>();
+    final ArrayMap<IBinder, MyActivityClientRecord> mActivities = new ArrayMap<>();
+
     final ApplicationThread mAppThread = new ApplicationThread();
     MyInstrumentation mInstrumentation;
+    MyWindowManager wm;
+
     final H mH = new H();
-    final ArrayMap<IBinder, MyService> mServices = new ArrayMap<>();
+
     private class ApplicationThread extends Binder
             implements IApplicationThread {
 
