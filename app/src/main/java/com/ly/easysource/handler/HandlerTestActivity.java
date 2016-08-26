@@ -30,19 +30,20 @@ public class HandlerTestActivity extends Activity {
             public void onClick(View v) {
                 Handler h=t.getHandler();
 
+                //1 空消息
                 h.sendEmptyMessage(1);
-
+                //2 普通消息
                 Message msg=new Message();
                 msg.what=2;
                 h.sendMessage(msg);
-
+                //3 runnable消息 msg.callback=runnable
                 h.post(new Runnable() {
                     @Override
                     public void run() {
                         Log.i("ly","runnable msg");
                     }
                 });
-
+                //4 显示构造runnable消息
                 Message msg2= Message.obtain(h, new Runnable() {
                     @Override
                     public void run() {
@@ -51,7 +52,7 @@ public class HandlerTestActivity extends Activity {
                 });
                 msg2.what=4;
                 msg2.sendToTarget();
-
+                //5 发送子线程退出信号，否则子线程一直处于loop状态
                 h.sendEmptyMessage(5);
             }
         });
