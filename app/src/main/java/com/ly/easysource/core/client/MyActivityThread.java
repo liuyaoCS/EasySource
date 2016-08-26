@@ -2,22 +2,33 @@ package com.ly.easysource.core.client;
 
 
 import android.app.Application;
+import android.app.Instrumentation;
 import android.content.ComponentName;
+import android.content.ContentProvider;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ProviderInfo;
 import android.content.pm.ServiceInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
+import android.os.RemoteException;
 import android.util.ArrayMap;
 
 import com.ly.easysource.components.MyContextImpl;
 import com.ly.easysource.components.MyInstrumentation;
+import com.ly.easysource.components.provider.binder.IContentProvider;
 import com.ly.easysource.components.service.MyService;
 import com.ly.easysource.core.client.binder.IApplicationThread;
 import com.ly.easysource.components.receiver.binder.IIntentReceiver;
+import com.ly.easysource.core.remote.binder.IActivityManager;
 import com.ly.easysource.window.MyActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Administrator on 2016/8/19 0019.
@@ -27,14 +38,42 @@ public class MyActivityThread {
     final ArrayMap<IBinder, MyActivityClientRecord> mActivities = new ArrayMap<>();
 
     final ApplicationThread mAppThread = new ApplicationThread();
-    MyInstrumentation mInstrumentation;
+    Instrumentation mInstrumentation;
     MyWindowManager wm;
 
     final H mH = new H();
 
+    public static void main(String[] args) {
+        Looper.prepareMainLooper();
+
+        MyActivityThread thread = new MyActivityThread();
+        thread.attach(false);
+
+        Looper.loop();
+    }
+
+    private void attach(boolean b) {
+        final IActivityManager mgr = MyActivityManagerNative.getDefault();
+        try {
+            mgr.attachApplication(mAppThread);
+        } catch (RemoteException ex) {
+            // Ignore
+        }
+    }
+
     private class ApplicationThread extends Binder
             implements IApplicationThread {
 
+        public final void bindApplication(String processName, ApplicationInfo appInfo,
+                                          List<ProviderInfo> providers, ComponentName instrumentationName,
+                                          ProfilerInfo profilerInfo, Bundle instrumentationArgs,
+                                          IInstrumentationWatcher instrumentationWatcher,
+                                          IUiAutomationConnection instrumentationUiConnection, int debugMode,
+                                          boolean enableOpenGlTrace, boolean trackAllocation, boolean isRestrictedBackupMode,
+                                          boolean persistent, Configuration config, CompatibilityInfo compatInfo,
+                                          Map<String, IBinder> services, Bundle coreSettings) {
+            mH.sendMessage(H.BIND_APPLICATION, data);
+        }
         @Override
         public final void scheduleLaunchActivity() {
             mH.sendMessage(H.LAUNCH_ACTIVITY, r);
@@ -81,11 +120,19 @@ public class MyActivityThread {
             receiver.performReceive(intent, resultCode, dataStr, extras, ordered,
                     sticky, sendingUser);
         }
+        @Override
+        public void scheduleInstallProvider(ProviderInfo provider) {
+            mH.sendMessage(H.INSTALL_PROVIDER, provider);
+        }
 
     }
     private class H extends Handler {
         public void handleMessage(Message msg) {
             switch (msg.what) {
+                case BIND_APPLICATION:
+                    AppBindData data = (AppBindData)msg.obj;
+                    handleBindApplication(data);
+                    break;
                 case LAUNCH_ACTIVITY: {
                     handleLaunchActivity(r, null);
                 } break;
@@ -116,6 +163,10 @@ public class MyActivityThread {
                     handleDispatchPackageBroadcast(msg.arg1, (String[])msg.obj);
                     break;
 
+                case INSTALL_PROVIDER:
+                    handleInstallProvider((ProviderInfo) msg.obj);
+                    break;
+
                 case NEW_INTENT:
                     handleNewIntent((NewIntentData)msg.obj);
                     break;
@@ -125,6 +176,81 @@ public class MyActivityThread {
             }
         }
     }
+    private void handleBindApplication(AppBindData data) {
+        final MyContextImpl appContext = MyContextImpl.createAppContext(this, data.info);
+
+        java.lang.ClassLoader cl = instrContext.getClassLoader();
+        mInstrumentation = (Instrumentation)
+                cl.loadClass(data.instrumentationName.getClassName()).newInstance();
+        mInstrumentation.init(this, instrContext, appContext,
+                new ComponentName(ii.packageName, ii.name), data.instrumentationWatcher,
+                data.instrumentationUiAutomationConnection);
+
+
+        Application app = data.info.makeApplication(data.restrictedBackupMode, null);
+        List<ProviderInfo> providers = data.providers;
+        if (providers != null) {
+            installContentProviders(app, providers);
+        }
+        mInstrumentation.callApplicationOnCreate(app);
+    }
+    private void installContentProviders(
+            Context context, List<ProviderInfo> providers) {
+
+        final ArrayList<IActivityManager.ContentProviderHolder> results =
+                new ArrayList<IActivityManager.ContentProviderHolder>();
+
+        for (ProviderInfo cpi : providers) {
+            IActivityManager.ContentProviderHolder cph = installProvider(context, null, cpi,
+                    false /*noisy*/, true /*noReleaseNeeded*/, true /*stable*/);
+            results.add(cph);
+        }
+
+        try {
+            MyActivityManagerNative.getDefault().publishContentProviders(
+                    getApplicationThread(), results);
+        } catch (RemoteException ex) {
+        }
+    }
+    private IActivityManager.ContentProviderHolder installProvider(Context context,
+                                                                   IActivityManager.ContentProviderHolder holder, ProviderInfo info,
+                                                                   boolean noisy, boolean noReleaseNeeded, boolean stable) {
+        ContentProvider localProvider = null;
+        IContentProvider provider;
+        final java.lang.ClassLoader cl = c.getClassLoader();
+        localProvider = (ContentProvider)cl.loadClass(info.name).newInstance();
+        provider = localProvider.getIContentProvider();
+
+        localProvider.onCreate();
+    }
+    public final IContentProvider acquireProvider(
+            Context c, String auth, int userId, boolean stable) {
+        final IContentProvider provider = acquireExistingProvider(c, auth, userId, stable);
+        if (provider != null) {
+            return provider;
+        }
+
+        IActivityManager.ContentProviderHolder holder = null;
+        try {
+            holder = MyActivityManagerNative.getDefault().getContentProvider(
+                    getApplicationThread(), auth, userId, stable);
+        } catch (RemoteException ex) {
+        }
+
+        holder = installProvider(c, holder, holder.info,
+                true /*noisy*/, holder.noReleaseNeeded, stable);
+        return holder.provider;
+    }
+    public final IContentProvider acquireExistingProvider(
+            Context c, String auth, int userId, boolean stable) {
+        final ProviderClientRecord pr = mProviderMap.get(key);
+        if (pr == null) {
+            return null;
+        }
+        IContentProvider provider = pr.mProvider;
+        return provider;
+    }
+
     private void handleLaunchActivity(MyActivityClientRecord r, Intent customIntent) {
         performLaunchActivity(r, customIntent);
     }
@@ -196,6 +322,8 @@ public class MyActivityThread {
                     data.token, SERVICE_DONE_EXECUTING_ANON, 0, 0);
         }
     }
-
+    public void handleInstallProvider(ProviderInfo info) {
+        installContentProviders(mInitialApplication, Lists.newArrayList(info));
+    }
 
 }

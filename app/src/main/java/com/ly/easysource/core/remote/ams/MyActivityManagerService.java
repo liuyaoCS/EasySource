@@ -14,6 +14,7 @@ import com.ly.easysource.core.client.MyActivityManagerNative;
 import com.ly.easysource.core.client.binder.IApplicationThread;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by Administrator on 2016/8/24 0024.
@@ -22,6 +23,16 @@ public class MyActivityManagerService extends MyActivityManagerNative {
     private MyActivityStackSupervisor mStackSupervisor;
     final MyActiveServices mServices;
     final HashMap<IBinder, ReceiverList> mRegisteredReceivers = new HashMap<>();
+    @Override
+    public final void attachApplication(IApplicationThread thread) {
+        thread.bindApplication(processName, appInfo, providers, app.instrumentationClass,
+                profilerInfo, app.instrumentationArguments, app.instrumentationWatcher,
+                app.instrumentationUiAutomationConnection, testMode, enableOpenGlTrace,
+                enableTrackAllocation, isRestrictedBackupMode || !normalMode, app.persistent,
+                new Configuration(mConfiguration), app.compat,
+                getCommonServicesLocked(app.isolated),
+                mCoreSettingsObserver.getCoreSettingsLocked());
+    }
     @Override
     public final int startActivity(IApplicationThread caller, String callingPackage,
                                    Intent intent, String resolvedType, IBinder resultTo, String resultWho, int requestCode,
@@ -68,5 +79,52 @@ public class MyActivityManagerService extends MyActivityManagerNative {
                 resultExtras, ordered, sticky, false, userId);
         queue.enqueueParallelBroadcastLocked(r);
         queue.scheduleBroadcastsLocked();
+    }
+    public final void publishContentProviders(IApplicationThread caller,
+                                              List<ContentProviderHolder> providers) {
+
+        final int N = providers.size();
+        for (int i = 0; i < N; i++) {
+            ContentProviderHolder src = providers.get(i);
+            if (src == null || src.info == null || src.provider == null) {
+                continue;
+            }
+            ContentProviderRecord dst = r.pubProviders.get(src.info.name);
+            if (dst != null) {
+                ComponentName comp = new ComponentName(dst.info.packageName, dst.info.name);
+                mProviderMap.putProviderByClass(comp, dst);
+                String names[] = dst.info.authority.split(";");
+                for (int j = 0; j < names.length; j++) {
+                    mProviderMap.putProviderByName(names[j], dst);
+                }
+            }
+        }
+    }
+    public final ContentProviderHolder getContentProvider(
+            IApplicationThread caller, String name, int userId, boolean stable) {
+        //接下来，如果provider存在，直接返回
+        ContentProviderRecord cpr = mProviderMap.getProviderByName(name, userId);
+        //不存在，如果进程启动，调度安装provider；否则创建进程
+            //等待进程安装完provider发布到此，清除mLaunchingProviders里相应的provider
+        if (proc != null && proc.thread != null) {
+            if (DEBUG_PROVIDER) Slog.d(TAG_PROVIDER,
+                    "Installing in existing process " + proc);
+            if (!proc.pubProviders.containsKey(cpi.name)) {
+                checkTime(startTime, "getContentProviderImpl: scheduling install");
+                proc.pubProviders.put(cpi.name, cpr);
+                try {
+                    proc.thread.scheduleInstallProvider(cpi);
+                } catch (RemoteException e) {
+                }
+            }
+        } else {
+            proc = startProcessLocked(cpi.processName,
+                    cpr.appInfo, false, 0, "content provider",
+                    new ComponentName(cpi.applicationInfo.packageName,
+                            cpi.name), false, false, false);
+
+        }
+        cpr.launchingApp = proc;
+        mLaunchingProviders.add(cpr);
     }
 }
