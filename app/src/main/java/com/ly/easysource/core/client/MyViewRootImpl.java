@@ -57,6 +57,8 @@ public class MyViewRootImpl {
     public void setView(MyView view, WindowManager.LayoutParams attrs, View panelParentView) {
         mView=view;
         //渲染view，需在接受事件之前
+        // 1)完成view attach到window上
+        // 2)完成view 的渲染
         requestLayout();
         //通过binder机制最终实现WindowManagerService->addWindow,完成window的添加,
         // 最终由W的windowFocusChanged接收，之后activity可以与用户交互了

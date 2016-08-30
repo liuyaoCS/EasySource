@@ -8,7 +8,8 @@ import com.ly.easysource.core.client.MyWindowManager;
 
 /**
  * 虽然没有window，但是依然是类似的模式,唯一区别在于：
- * showXXX方法不能在onCreate或者onResume中调用，否则token会为空，报BadTokenException
+ * showXXX方法不能在onCreate或者onResume中调用，否则token会为空，报BadTokenException.
+ * 这是因为它的显示需要achorView，而achorView还没有attached，它是在onResume后的performTraversals()中attachToWindow的
  */
 public class MyPopupWindow {
     private MyWindowManager myWindowManager;

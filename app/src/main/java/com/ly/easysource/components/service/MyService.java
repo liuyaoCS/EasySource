@@ -12,7 +12,7 @@ import android.support.annotation.Nullable;
 /**
  * 1 service可以通过android:process=":remote"或者android:process="remote"运行在另外的进程
  * 其实是Binder线程池里，所以如果指定复杂运算，依然要重新开辟线程
- * 2 普通service流程
+ * 2 普通service流程 attach->onStartCommand->onBind
  *   绑定service流程（指定flag为Context.AUTO_CREATE），attach->onCreate->onBind
  */
 public class MyService extends Service{
@@ -29,7 +29,7 @@ public class MyService extends Service{
         super.onCreate();
     }
     /**
-     * 直接startService的方法调用onStartCommand，适合远程复杂计算
+     *直接startService的方法调用onStartCommand，适合远程复杂计算
      *由activityThread里的回调可见，onStart已经废弃，调用的是这个onStartCommand
      */
     @Override

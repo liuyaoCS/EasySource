@@ -9,7 +9,7 @@ import android.support.annotation.Nullable;
 
 /**
  * 原理：
- * 1 通过binder像其他组件甚至应用提供数据,通过AMS根据uri获取对应的provider的Binder接口IContentProvider，
+ * 1 通过binder向其他组件甚至应用提供数据,通过AMS根据uri获取对应的provider的Binder接口IContentProvider，
  * 通过这个接口访问provider的数据源。
  * 2 provider可以用android:multiprocess指定多实例，每个调用进程都会有一个provider对象，避免进程间开销。
  * 但是实际缺乏使用场景。
@@ -18,7 +18,7 @@ import android.support.annotation.Nullable;
  * 4 所在应用访问时，里面的增删改查是在主线程；其他应用访问时，是在Binder线程。
  *
  * 好处：
- * 1 统一了数据访问方式,但其实如果数据源不是数据库，那么要自定义Cursor，还是很麻烦的。
+ * 1 统一了数据访问方式,但其实如果数据源不是数据库，那么要自定义Cursor，非常麻烦。
  *
  * 使用：
  * 1 xml中声明android:authorities,这就是内容提供者的域名

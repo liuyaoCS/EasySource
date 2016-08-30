@@ -9,14 +9,17 @@ import android.os.IBinder;
 import android.support.annotation.LayoutRes;
 import android.view.MotionEvent;
 import android.view.Window;
+
+import com.ly.easysource.components.MyContextImpl;
 import com.ly.easysource.core.client.MyPhoneWindow;
 import com.ly.easysource.core.client.MyWindowManager;
 
 public class MyActivity implements Window.Callback{
     private MyPhoneWindow mWindow;
     private MyWindowManager mWindowManager;
+    private MyContextImpl mBase;
 
-    final void attach(Context context, ActivityThread aThread,
+    public final void attach(Context context, ActivityThread aThread,
                       Instrumentation instr, IBinder token, int ident,
                       Application application, Intent intent, ActivityInfo info
                       ) {
@@ -33,6 +36,11 @@ public class MyActivity implements Window.Callback{
         mWindowManager = mWindow.getWindowManager();
 
     }
+
+    private void attachBaseContext(Context context) {
+        mBase=context;
+    }
+
     public void setContentView(@LayoutRes int layoutResID) {
         getWindow().setContentView(layoutResID);
     }

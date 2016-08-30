@@ -1,15 +1,19 @@
 package com.ly.easysource.core.client;
 
 
+import android.annotation.TargetApi;
 import android.app.Application;
 import android.app.Instrumentation;
 import android.content.ComponentName;
 import android.content.ContentProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.ProviderInfo;
 import android.content.pm.ServiceInfo;
+import android.content.res.Configuration;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -29,10 +33,12 @@ import com.ly.easysource.window.MyActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Administrator on 2016/8/19 0019.
  */
+@TargetApi(Build.VERSION_CODES.KITKAT)
 public class MyActivityThread {
     final ArrayMap<IBinder, MyService> mServices = new ArrayMap<>();
     final ArrayMap<IBinder, MyActivityClientRecord> mActivities = new ArrayMap<>();
@@ -47,6 +53,14 @@ public class MyActivityThread {
         Looper.prepareMainLooper();
 
         MyActivityThread thread = new MyActivityThread();
+        // ams.attachApplication-> activityThread.bindApplication
+        // 1) 完成ContextImpl环境创建
+        //        后期activity的attach就可以拿到这个环境的引用，赋给自己的mBase
+        // 2）完成Instrumentation工具创建
+        //        后期mInstrumentation可以辅助activity application的创建
+        // 3）创建Application
+        // 4) 创建Provider
+        // 5）Application->oncreate
         thread.attach(false);
 
         Looper.loop();
@@ -127,6 +141,19 @@ public class MyActivityThread {
 
     }
     private class H extends Handler {
+        private static final int BIND_APPLICATION = 0;
+        private static final int LAUNCH_ACTIVITY = 1;
+        private static final int RESUME_ACTIVITY = 2;
+        private static final int CREATE_SERVICE = 3;
+        private static final int SERVICE_ARGS = 4;
+        private static final int BIND_SERVICE = 5;
+        private static final int UNBIND_SERVICE = 6;
+        private static final int INSTALL_PROVIDER = 7;
+        private static final int NEW_INTENT = 8;
+        private static final int ACTIVITY_CONFIGURATION_CHANGED = 9;
+        private static final int DESTROY_ACTIVITY = 10;
+
+
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case BIND_APPLICATION:

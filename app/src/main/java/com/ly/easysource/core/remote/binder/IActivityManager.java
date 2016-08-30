@@ -16,6 +16,7 @@
 
 package com.ly.easysource.core.remote.binder;
 
+import android.app.ActivityManager;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.ActivityManager.StackInfo;
@@ -56,6 +57,7 @@ import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.os.IResultReceiver;
 import com.ly.easysource.components.receiver.binder.IIntentReceiver;
 import com.ly.easysource.components.service.binder.IServiceConnection;
+import com.ly.easysource.core.client.binder.IApplicationThread;
 
 import java.util.List;
 
@@ -127,7 +129,7 @@ public interface IActivityManager extends IInterface {
     public ComponentName getCallingActivity(IBinder token) throws RemoteException;
     public List<IAppTask> getAppTasks(String callingPackage) throws RemoteException;
     public int addAppTask(IBinder activityToken, Intent intent,
-            ActivityManager.TaskDescription description, Bitmap thumbnail) throws RemoteException;
+                          ActivityManager.TaskDescription description, Bitmap thumbnail) throws RemoteException;
     public Point getAppTaskThumbnailSize() throws RemoteException;
     public List<RunningTaskInfo> getTasks(int maxNum, int flags) throws RemoteException;
     public List<ActivityManager.RecentTaskInfo> getRecentTasks(int maxNum,
