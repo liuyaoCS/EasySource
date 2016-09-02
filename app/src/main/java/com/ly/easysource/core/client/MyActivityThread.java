@@ -144,6 +144,7 @@ public class MyActivityThread {
         private static final int BIND_APPLICATION = 0;
         private static final int LAUNCH_ACTIVITY = 1;
         private static final int RESUME_ACTIVITY = 2;
+        public static final int STOP_ACTIVITY_HIDE  = 104;
         private static final int CREATE_SERVICE = 3;
         private static final int SERVICE_ARGS = 4;
         private static final int BIND_SERVICE = 5;
@@ -165,6 +166,9 @@ public class MyActivityThread {
                 } break;
                 case RESUME_ACTIVITY:
                     handleResumeActivity((IBinder) msg.obj, true, msg.arg1 != 0, true);
+                    break;
+                case STOP_ACTIVITY_HIDE:
+                    handleStopActivity((IBinder)msg.obj, false, msg.arg2);
                     break;
 
                 case CREATE_SERVICE:
@@ -294,6 +298,7 @@ public class MyActivityThread {
         if (r.state != null) {
             mInstrumentation.callActivityOnRestoreInstanceState(activity, r.state);
         }
+
         return r.activity;
     }
 
@@ -315,7 +320,33 @@ public class MyActivityThread {
         r.activity.performResume();
         return r;
     }
+    private void handleStopActivity(IBinder token, boolean show, int configChanges) {
+        performStopActivityInner(r, info, show, true);
+    }
+    private void performStopActivityInner(ActivityClientRecord r,
+                                          StopInfo info, boolean keepShown, boolean saveState) {
+        // Next have the activity save its current state and managed dialogs...
+        if (!r.activity.mFinished && saveState) {
+            if (r.state == null) {
+                callCallActivityOnSaveInstanceState(r);
+            }
+        }
 
+        if (!keepShown) {
+            try {
+                // Now we are idle.
+                r.activity.performStop();
+            } catch (Exception e) {
+                if (!mInstrumentation.onException(r.activity, e)) {
+                    throw new RuntimeException(
+                            "Unable to stop activity "
+                                    + r.intent.getComponent().toShortString()
+                                    + ": " + e.toString(), e);
+                }
+            }
+            r.stopped = true;
+        }
+    }
     private void handleCreateService(CreateServiceData data) {
 
         LoadedApk packageInfo = getPackageInfoNoCheck(
