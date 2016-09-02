@@ -295,6 +295,10 @@ public class MyActivityThread {
                 r.ident, app, r.intent, r.activityInfo);
 
         mInstrumentation.callActivityOnCreate(activity, r.state);
+        if (!r.activity.mFinished) {
+            activity.performStart();
+            r.stopped = false;
+        }
         if (r.state != null) {
             mInstrumentation.callActivityOnRestoreInstanceState(activity, r.state);
         }
