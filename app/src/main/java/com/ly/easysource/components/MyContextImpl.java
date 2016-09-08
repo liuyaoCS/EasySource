@@ -9,7 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.AssetManager;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
@@ -100,6 +102,27 @@ public class MyContextImpl {
 
             return acquireProvider(uri);
         }
+    }
+
+    /**
+     * Resources内部也维护了mAssets
+     * 1 获取Color String Dimension（PixelSize） Drawable
+     * 2 获取DisplayMetrics
+     * 3 获取raw里的文件 openRawResource
+     * @return
+     */
+    @Override
+    public Resources getResources() {
+        return mResources;
+    }
+
+    /**
+     * 获取Assets里的文件 open
+     * @return
+     */
+    @Override
+    public AssetManager getAssets() {
+        return getResources().getAssets();
     }
 
 }
