@@ -294,6 +294,9 @@ public class MyActivityThread {
         activity.attach(appContext, this, getInstrumentation(), r.token,
                 r.ident, app, r.intent, r.activityInfo);
 
+        //activity->performCreate
+        //                 ->onCreate(icicle);
+        //                 ->mFragments.dispatchActivityCreated();
         mInstrumentation.callActivityOnCreate(activity, r.state);
         if (!r.activity.mFinished) {
             activity.performStart();
