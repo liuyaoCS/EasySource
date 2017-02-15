@@ -11,7 +11,7 @@ import android.widget.ListView;
  *
  * Adapter采用适配器模式：将ListView需要的关于item View接口抽象到Adapter对象，Adapter统一将Item View输出到view供ListView布局调用
  * Adapter本身作为内部也维护了
- *  mDataSetObservable--发布者（BaseAdapter中），所以notifyDataSetChanged也要有发布者调用。
+ *  mDataSetObservable--发布者（BaseAdapter中），所以notifyDataSetChanged也由有发布者调用。
  */
 public class MyListView extends MyAbsListView {
     public void setAdapter(ListAdapter adapter) {

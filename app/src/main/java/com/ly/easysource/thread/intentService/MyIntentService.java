@@ -8,7 +8,7 @@ import android.content.Intent;
  */
 public class MyIntentService extends IntentService{
     /**
-     * 需要构造午餐构造函数,否则Intent service=new Intent(this, MyIntentService.class);无法实例化
+     * 需要构造无惨构造函数,否则Intent service=new Intent(this, MyIntentService.class);无法实例化
      */
     public MyIntentService() {
         this("test");

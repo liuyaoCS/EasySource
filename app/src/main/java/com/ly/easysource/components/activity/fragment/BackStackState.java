@@ -64,7 +64,7 @@ public class BackStackState {
          * 默认不允许状态丢失
          * 关于状态丢失：
          * 1 比如说如果在activity的onStop里调用commit()就会抛异常，显然一般我们不会这么做，所以一般情况可以直接用commit。
-         * 2 但是有时有异步操作，尤其设计到handler异步消息处理的时候，可能会有问题，这是可以用commitAllowingStateLoss
+         * 2 但是有时有异步操作，尤其设计到handler异步消息处理的时候，可能会有问题，这时可以用commitAllowingStateLoss
          */
         public int commit() {
             return commitInternal(false);

@@ -1,8 +1,10 @@
 package com.ly.easysource.viewmechanism;
 
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.LayoutAnimationController;
 
 import java.util.ArrayList;
@@ -10,7 +12,7 @@ import java.util.ArrayList;
 /**
  * Created by Administrator on 2016/8/19 0019.
  */
-public abstract  class MyViewGroup extends MyView{
+public abstract  class MyViewGroup extends MyView  implements ViewParent {
     /**
      * 各个实现类只需要实现这个函数
      */
@@ -130,7 +132,20 @@ public abstract  class MyViewGroup extends MyView{
     }
     @Override
     protected abstract void onLayout(boolean changed, int l, int t, int r, int b);
-
+    public final void invalidateChild(View child, final Rect dirty) {
+        ViewParent parent=this;
+        do{
+            //一直上溯，直到viewRootImpl
+            parent = parent.invalidateChildInParent(location, dirty);
+        }while(parent!=null);
+    }
+    public ViewParent invalidateChildInParent(final int[] location, final Rect dirty) {
+        if ((mPrivateFlags & PFLAG_DRAWN) == PFLAG_DRAWN ||
+                (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID) {
+            return mParent;
+        }
+        return null;
+    }
     @Override
     protected void dispatchDraw(Canvas canvas) {
         final int count = mChildrenCount;

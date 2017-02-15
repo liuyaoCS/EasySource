@@ -5,6 +5,7 @@ import android.app.FragmentController;
 import android.app.FragmentHostCallback;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -12,6 +13,7 @@ import android.os.PersistableBundle;
 
 import com.ly.easysource.components.activity.fragment.MyFragment;
 import com.ly.easysource.components.activity.fragment.MyFragmentManager;
+import com.ly.easysource.components.receiver.binder.IIntentReceiver;
 
 
 public class MyActivity extends Activity{

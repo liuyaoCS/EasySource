@@ -5,19 +5,40 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 
 import java.util.ArrayList;
 
+import static android.view.View.VISIBLE;
+
 public class MyView {
+    int mPrivateFlags;
+    //是否已经设值边界(mLeft..等设置后设置为1)
+    static final int PFLAG_HAS_BOUNDS= 0x00000010;
+    //是否绘制后设为1，可以从新请求绘制
+    //因为绘制过程通常是先设置相关标志位，然后发送doTraversals任务，真正执行任务后，在draw里面重置此flag
+    static final int PFLAG_DRAWN = 0x00000020;
+    //缓存时候有效，原理类似FLAG_DRAWN
+    static final int PFLAG_DRAWING_CACHE_VALID = 0x00008000;
+
     int mMeasuredHeight;
     int mMeasuredWidth;
+
+    protected int mLeft;
+    protected int mRight;
+    protected int mTop;
+    protected int mBottom;
+
+    // RenderNode holding View properties, potentially holding a DisplayList of View content.
+    final RenderNode mRenderNode;
     public final void measure(int widthMeasureSpec, int heightMeasureSpec) {
         onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -104,8 +125,46 @@ public class MyView {
             mTop = top;
             mRight = right;
             mBottom = bottom;
+            mRenderNode.setLeftTopRightBottom(mLeft, mTop, mRight, mBottom);
+
+            mPrivateFlags |= PFLAG_HAS_BOUNDS;
+            if ((mViewFlags & VISIBILITY_MASK) == VISIBLE || mGhostView != null) {
+                // If we are visible, force the DRAWN bit to on so that
+                // this invalidate will go through (at least to our parent).
+                // This is because someone may have invalidated this view
+                // before this call to setFrame came in, thereby clearing
+                // the DRAWN bit.
+                mPrivateFlags |= PFLAG_DRAWN;
+                invalidate(sizeChanged);
+            }
         }
         return changed;
+    }
+    void invalidate(boolean invalidateCache) {
+        invalidateInternal(0, 0, mRight - mLeft, mBottom - mTop, invalidateCache, true);
+    }
+
+    void invalidateInternal(int l, int t, int r, int b, boolean invalidateCache,
+                            boolean fullInvalidate) {
+
+        if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
+                || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
+                ) {
+            if (fullInvalidate) {
+                mPrivateFlags &= ~PFLAG_DRAWN;
+            }
+
+            if (invalidateCache) {
+                mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+            }
+            // Propagate the damage rectangle to the parent view.;
+            final ViewParent p = mParent;
+            if (p != null && ai != null && l < r && t < b) {
+                final Rect damage = ai.mTmpInvalRect;
+                damage.set(l, t, r, b);
+                p.invalidateChild(this, damage);//p此处为当前view的父view->viewgroup
+            }
+        }
     }
     /**
      *ViewGroup的实现类需要实现这个方法，调用children的layout
@@ -122,6 +181,7 @@ public class MyView {
      *
      * @param canvas The Canvas to which the View is rendered.
      */
+    //先ondraw画内容，再dispatchdraw画children
     public void draw(Canvas canvas) {
         /*
          * Draw traversal performs several drawing steps which must be executed

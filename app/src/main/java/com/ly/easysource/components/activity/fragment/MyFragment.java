@@ -76,11 +76,7 @@ public class MyFragment extends Fragment{
     }
 
     /**
-     *onCreateView调用完后立即调用,之后
-     *  1 如果activity创建完了就调用onActivityCreated（onClick触发创建Fragment）
-     *  2 否则等到activity创建完成调用onActivityCreated(onCreate触发创建Fragment)
-     *  实际上，activity->onCreate之后立即调用mFragments->dispatchOnCreate,所以这个时候其实系统对activity的创建已经完成，用户onCreate的内容还没有完成，
-     *  等onCreate调用完毕之后，立即调用mFragments->dispatchOnCreate，从而激发onActivityCreated，然后->onStart->onResume
+     *onCreate->onCreateView->onViewCreated->onActivityCreated->onStart
      */
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {

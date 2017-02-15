@@ -26,10 +26,11 @@ import android.view.View;
  *   1）down事件由目标child处理
  *      因为目标child在dispatchTouchEvent里才能调用requestDisallowInterceptTouchEvent，所以第一个down事件还来不及
  *      改变父容器的拦截策略，所以down事件不能让父容器拦截。
- *   2）move/up事件父容器通过onInterceptTouchEvent拦截
- *      如果目标child需要消费这个事件，通过requestDisallowInterceptTouchEvent禁止父容器的拦截，处理move/up事件
+ *   2）move事件父容器通过onInterceptTouchEvent拦截
+ *      如果目标child需要消费这个事件，通过requestDisallowInterceptTouchEvent禁止父容器的拦截，处理move事件
  *      如果目标child不需要消费这个事件，不作处理
- *
+ *   3）up事件父容器不拦截
+ *      假如父容器拦截up，那么目标child收不到up，无法处理onclick事件
  */
 public  class MyViewGroupSimple extends MyView {
 

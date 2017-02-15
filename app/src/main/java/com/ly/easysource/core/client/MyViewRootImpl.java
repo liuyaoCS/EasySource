@@ -1,8 +1,10 @@
 package com.ly.easysource.core.client;
 
+import android.graphics.Rect;
 import android.os.Message;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.WindowManager;
 
 import com.ly.easysource.core.client.binder.IWindow;
@@ -14,8 +16,9 @@ import java.lang.ref.WeakReference;
 /**
  * Created by Administrator on 2016/8/19 0019.
  */
-public class MyViewRootImpl {
+public class MyViewRootImpl implements  ViewParent{
     MyView mView;
+    boolean mWillDrawSoon;
     boolean mTraversalScheduled;
     //binder机制，远端Session的客户端代理
     final IWindowSession mWindowSession;
@@ -57,8 +60,8 @@ public class MyViewRootImpl {
     public void setView(MyView view, WindowManager.LayoutParams attrs, View panelParentView) {
         mView=view;
         //渲染view，需在接受事件之前
-        // 1)完成view attach到window上
-        // 2)完成view 的渲染
+        // 1)完成view 的渲染
+        // 2)完成view attach到window上
         requestLayout();
         //通过binder机制最终实现WindowManagerService->addWindow,完成window的添加,
         // 最终由W的windowFocusChanged接收，之后activity可以与用户交互了
@@ -70,6 +73,12 @@ public class MyViewRootImpl {
     @Override
     public void requestLayout() {
         scheduleTraversals();
+    }
+    public ViewParent invalidateChildInParent(int[] location, Rect dirty) {
+        if (!mWillDrawSoon ) {
+            scheduleTraversals();
+        }
+        return null;
     }
     void scheduleTraversals() {
         if (!mTraversalScheduled) {
@@ -144,6 +153,14 @@ public class MyViewRootImpl {
         mView.layout(0, 0, mView.getMeasuredWidth(), mView.getMeasuredHeight());
     }
     private void performDraw() {
-        mView.draw(canvas);
+        draw(fullRedrawNeeded);
     }
+    private void draw(boolean fullRedrawNeeded) {
+        if (mAttachInfo.mHardwareRenderer != null && mAttachInfo.mHardwareRenderer.isEnabled()) {
+            mAttachInfo.mHardwareRenderer.draw(mView, mAttachInfo, this);
+        }else{
+           drawSoftware(surface, mAttachInfo, xOffset, yOffset, scalingRequired, dirty);
+        }
+    }
+
 }
